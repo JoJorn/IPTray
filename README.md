@@ -36,16 +36,10 @@ Then run `publish\IpTray.exe`.
 Because the app needs admin rights, a normal startup shortcut would show a UAC prompt every time.
 A scheduled task with *highest privileges* starts it elevated without a prompt.
 
-Run once in an **admin PowerShell** (adjust the path):
+Run the `install-startup.ps1` script:
 
 ```powershell
-$exe = "C:\path\to\IpTray\publish\IpTray.exe"
-
-Register-ScheduledTask -TaskName "IpTray" `
-  -Action    (New-ScheduledTaskAction -Execute $exe) `
-  -Trigger   (New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME) `
-  -Principal (New-ScheduledTaskPrincipal -UserId $env:USERNAME -RunLevel Highest -LogonType Interactive) `
-  -Settings  (New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit 0)
+Start-Process powershell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -File `"$PWD\install-startup.ps1`""
 ```
 
 The settings line keeps Windows from stopping the app after 3 days or on battery.
