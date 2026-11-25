@@ -10,7 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks> <!-- LibraryImport source generator -->
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>app.ico</ApplicationIcon>
-    <AssemblyName>IpTray</AssemblyName>
+    <AssemblyName>IPTray</AssemblyName>
     <NoWarn>$(NoWarn);WPF0001</NoWarn> <!-- Fluent ThemeMode -->
 
   </PropertyGroup>

@@ -6,7 +6,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 
-namespace IpTray;
+namespace IPTray;
 
 public sealed record Adapter(
     int Index, string Name, bool IsUp, bool Dhcp,

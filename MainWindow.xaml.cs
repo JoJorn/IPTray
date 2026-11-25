@@ -6,7 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 
-namespace IpTray;
+namespace IPTray;
 
 public partial class MainWindow : Window
 {
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         _loading = false;
 
         if (fillFields) Fill(Current);
-        TooltipChanged?.Invoke(Current is { } a ? $"IP Switcher\n{a.Name}: {a.Summary}" : "IP Switcher");
+        TooltipChanged?.Invoke(Current is { } a ? $"IPTray\n{a.Name}: {a.Summary}" : "IPTray");
     }
 
     private void Fill(Adapter? a)

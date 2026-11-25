@@ -28,7 +28,7 @@ Run:
 dotnet publish -c Release -o publish
 ```
 
-Then run `publish\IpTray.exe`.
+Then run `publish\IPTray.exe`.
 
 ## Start with Windows (no UAC prompt)
 
@@ -43,8 +43,8 @@ Start-Process powershell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -Fil
 
 | Action | Command |
 |---|---|
-| Start now (no prompt) | `Start-ScheduledTask IpTray` |
-| Remove from startup | `Unregister-ScheduledTask IpTray` |
+| Start now (no prompt) | `Start-ScheduledTask IPTray` |
+| Remove from startup | `Unregister-ScheduledTask IPTray` |
 
 
 ## How it works

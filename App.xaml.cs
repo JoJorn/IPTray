@@ -2,7 +2,7 @@ using System.Windows;
 using Drawing = System.Drawing;
 using Forms = System.Windows.Forms;
 
-namespace IpTray;
+namespace IPTray;
 
 public partial class App : Application
 {
@@ -11,7 +11,7 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        _singleInstance = new Mutex(true, @"Local\IpTray", out var isFirst);
+        _singleInstance = new Mutex(true, @"Local\IPTray", out var isFirst);
         if (!isFirst) { Shutdown(); return; }
 
         base.OnStartup(e);
@@ -22,7 +22,7 @@ public partial class App : Application
         _tray = new Forms.NotifyIcon
         {
             Icon = new Drawing.Icon(iconStream, Forms.SystemInformation.SmallIconSize),
-            Text = "IP Switcher",
+            Text = "IPTray",
             Visible = true,
             ContextMenuStrip = new Forms.ContextMenuStrip(),
         };
