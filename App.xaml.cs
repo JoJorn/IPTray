@@ -1,4 +1,6 @@
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 using Drawing = System.Drawing;
 using Forms = System.Windows.Forms;
 
@@ -17,20 +19,33 @@ public partial class App : Application
         base.OnStartup(e);
 
         var flyout = new MainWindow();
+        var owner = new WindowInteropHelper(flyout).EnsureHandle();
         using var iconStream = GetResourceStream(new Uri("pack://application:,,,/app.ico")).Stream;
+
+        // Native Windows menu: instant, and Windows 11 gives it the modern look.
+        SetPreferredAppMode(1); // follow system light/dark (undocumented, used by many apps)
+        FlushMenuThemes();
+        var menu = CreatePopupMenu();
+        AppendMenu(menu, MF_STRING, 1, "Open");
+        AppendMenu(menu, MF_SEPARATOR, 0, null);
+        AppendMenu(menu, MF_STRING, 2, "Exit");
 
         _tray = new Forms.NotifyIcon
         {
             Icon = new Drawing.Icon(iconStream, Forms.SystemInformation.SmallIconSize),
             Text = "IPTray",
             Visible = true,
-            ContextMenuStrip = new Forms.ContextMenuStrip(),
         };
-        _tray.ContextMenuStrip.Items.Add("Open", null, (_, _) => flyout.ShowFlyout());
-        _tray.ContextMenuStrip.Items.Add("Exit", null, (_, _) => Shutdown());
-        _tray.MouseClick += (_, args) =>
+        _tray.MouseUp += (_, args) =>
         {
-            if (args.Button == Forms.MouseButtons.Left) flyout.Toggle();
+            if (args.Button == Forms.MouseButtons.Left) { flyout.Toggle(); return; }
+            if (args.Button != Forms.MouseButtons.Right) return;
+
+            var pos = Forms.Cursor.Position;
+            SetForegroundWindow(owner); // so the menu closes on an outside click
+            var cmd = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pos.X, pos.Y, owner, 0);
+            if (cmd == 1) flyout.ShowFlyout();
+            else if (cmd == 2) Shutdown();
         };
 
         flyout.TooltipChanged += text => _tray.Text = text.Length > 127 ? text[..127] : text;
@@ -43,4 +58,29 @@ public partial class App : Application
         _singleInstance?.Dispose();
         base.OnExit(e);
     }
+
+    // ── Win32 ──────────────────────────────────────────────────────
+
+    private const uint MF_STRING = 0x0, MF_SEPARATOR = 0x800;
+    private const uint TPM_RIGHTBUTTON = 0x2, TPM_BOTTOMALIGN = 0x20, TPM_RETURNCMD = 0x100;
+
+    [LibraryImport("user32.dll")]
+    private static partial nint CreatePopupMenu();
+
+    [LibraryImport("user32.dll", EntryPoint = "AppendMenuW", StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool AppendMenu(nint menu, uint flags, nuint id, string? text);
+
+    [LibraryImport("user32.dll")]
+    private static partial int TrackPopupMenuEx(nint menu, uint flags, int x, int y, nint hwnd, nint tpm);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetForegroundWindow(nint hwnd);
+
+    [LibraryImport("uxtheme.dll", EntryPoint = "#135")]
+    private static partial int SetPreferredAppMode(int mode);
+
+    [LibraryImport("uxtheme.dll", EntryPoint = "#136")]
+    private static partial void FlushMenuThemes();
 }
