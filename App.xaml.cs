@@ -30,25 +30,36 @@ public partial class App : Application
         AppendMenu(menu, MF_SEPARATOR, 0, null);
         AppendMenu(menu, MF_STRING, 2, "Exit");
 
+        // Own hover window instead of the tray tooltip, which shows only after a delay.
+        var hover = new HoverWindow();
+        var menuOpen = false;
+
         _tray = new Forms.NotifyIcon
         {
             Icon = new Drawing.Icon(iconStream, Forms.SystemInformation.SmallIconSize),
-            Text = "IPTray",
+            Text = "", // no native tooltip
             Visible = true,
+        };
+        _tray.MouseMove += (_, _) =>
+        {
+            if (!menuOpen && !flyout.IsVisible) hover.OnIconHover();
         };
         _tray.MouseUp += (_, args) =>
         {
+            hover.Hide();
             if (args.Button == Forms.MouseButtons.Left) { flyout.Toggle(); return; }
             if (args.Button != Forms.MouseButtons.Right) return;
 
             var pos = Forms.Cursor.Position;
             SetForegroundWindow(owner); // so the menu closes on an outside click
+            menuOpen = true;
             var cmd = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pos.X, pos.Y, owner, 0);
+            menuOpen = false;
             if (cmd == 1) flyout.ShowFlyout();
             else if (cmd == 2) Shutdown();
         };
 
-        flyout.TooltipChanged += text => _tray.Text = text.Length > 127 ? text[..127] : text;
+        flyout.CurrentChanged += hover.SetAdapter;
         flyout.Refresh();
     }
 

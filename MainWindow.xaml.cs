@@ -12,8 +12,9 @@ public partial class MainWindow : Window
 {
     private DateTime _hiddenAt;
     private bool _loading;
+    private readonly Settings _settings = Settings.Load();
 
-    public event Action<string>? TooltipChanged;
+    public event Action<Adapter?>? CurrentChanged;
 
     private Adapter? Current => AdapterBox.SelectedItem as Adapter;
 
@@ -60,16 +61,16 @@ public partial class MainWindow : Window
 
     public void Refresh(bool fillFields = true)
     {
-        var selected = Current?.Index;
+        var selected = Current?.Name ?? _settings.LastAdapter;
         var adapters = NetConfig.GetAdapters();
 
         _loading = true;
         AdapterBox.ItemsSource = adapters;
-        AdapterBox.SelectedItem = adapters.FirstOrDefault(a => a.Index == selected) ?? adapters.FirstOrDefault();
+        AdapterBox.SelectedItem = adapters.FirstOrDefault(a => a.Name == selected) ?? adapters.FirstOrDefault();
         _loading = false;
 
         if (fillFields) Fill(Current);
-        TooltipChanged?.Invoke(Current is { } a ? $"IPTray\n{a.Name}: {a.Summary}" : "IPTray");
+        CurrentChanged?.Invoke(Current);
     }
 
     private void Fill(Adapter? a)
@@ -85,7 +86,11 @@ public partial class MainWindow : Window
 
     private void OnAdapterChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_loading) Fill(Current);
+        if (_loading || Current is not { } a) return;
+        Fill(a);
+        _settings.LastAdapter = a.Name; // remember it between runs
+        _settings.Save();
+        CurrentChanged?.Invoke(a);
     }
 
     private void OnRefresh(object sender, RoutedEventArgs e) => Refresh();
@@ -135,5 +140,5 @@ public partial class MainWindow : Window
     }
 
     [LibraryImport("dwmapi.dll")]
-    private static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref int value, int size);
+    internal static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref int value, int size);
 }

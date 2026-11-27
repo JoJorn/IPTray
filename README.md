@@ -12,7 +12,7 @@ Right-click for Open / Exit. Press Esc or click elsewhere to close the flyout.
 - Mask field accepts `255.255.255.0`, `24` or `/24` (empty = /24)
 - Multiple DNS servers, comma separated
 - Adapter list refreshes automatically when your network changes
-- Tray tooltip shows the current IP
+- Hover the tray icon to instantly see the current IP
 - Modern Windows 11 look (Fluent theme, follows light/dark mode)
 
 ## Requirements
