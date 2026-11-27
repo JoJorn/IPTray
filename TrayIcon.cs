@@ -30,7 +30,7 @@ public sealed unsafe partial class TrayIcon : IDisposable
         
         _window = new HwndSource(new HwndSourceParameters(name) { WindowStyle = 0, Width = 0, Height = 0 });
         _window.AddHook(WndProc);
-        adcast through
+        // Let the TaskbarCreated broadcast through (UIPI blocks it when running elevated)
         ChangeWindowMessageFilterEx(_window.Handle, (uint)WM_TASKBARCREATED, 1 /* MSGFLT_ALLOW */, 0);
         Add();
     }
