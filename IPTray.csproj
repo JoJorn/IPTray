@@ -4,7 +4,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net11.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms> <!-- only for the tray icon -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks> <!-- LibraryImport source generator -->
@@ -14,12 +13,5 @@
     <NoWarn>$(NoWarn);WPF0001</NoWarn> <!-- Fluent ThemeMode -->
 
   </PropertyGroup>
-
-  <ItemGroup>
-    <!-- keep WinForms/Drawing out of the global namespace so WPF types win -->
-    <Using Remove="System.Windows.Forms" />
-    <Using Remove="System.Drawing" />
-    <Resource Include="app.ico" />
-  </ItemGroup>
 
 </Project>

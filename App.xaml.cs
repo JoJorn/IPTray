@@ -1,15 +1,13 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using Drawing = System.Drawing;
-using Forms = System.Windows.Forms;
 
 namespace IPTray;
 
 public partial class App : Application
 {
     private Mutex? _singleInstance;
-    private Forms.NotifyIcon? _tray;
+    private TrayIcon? _tray;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -20,7 +18,6 @@ public partial class App : Application
 
         var flyout = new MainWindow();
         var owner = new WindowInteropHelper(flyout).EnsureHandle();
-        using var iconStream = GetResourceStream(new Uri("pack://application:,,,/app.ico")).Stream;
 
         // Native Windows menu: instant, and Windows 11 gives it the modern look.
         SetPreferredAppMode(1); // follow system light/dark (undocumented, used by many apps)
@@ -34,26 +31,23 @@ public partial class App : Application
         var hover = new HoverWindow();
         var menuOpen = false;
 
-        _tray = new Forms.NotifyIcon
-        {
-            Icon = new Drawing.Icon(iconStream, Forms.SystemInformation.SmallIconSize),
-            Text = "", // no native tooltip
-            Visible = true,
-        };
-        _tray.MouseMove += (_, _) =>
+        _tray = new TrayIcon("IPTray");
+        _tray.Hover += () =>
         {
             if (!menuOpen && !flyout.IsVisible) hover.OnIconHover();
         };
-        _tray.MouseUp += (_, args) =>
+        _tray.LeftClick += () =>
         {
             hover.Hide();
-            if (args.Button == Forms.MouseButtons.Left) { flyout.Toggle(); return; }
-            if (args.Button != Forms.MouseButtons.Right) return;
-
-            var pos = Forms.Cursor.Position;
-            SetForegroundWindow(owner); // so the menu closes on an outside click
+            flyout.Toggle();
+        };
+        _tray.RightClick += () =>
+        {
+            hover.Hide();
+            var (x, y) = Native.CursorPosition;
+            Native.SetForegroundWindow(owner); // so the menu closes on an outside click
             menuOpen = true;
-            var cmd = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, pos.X, pos.Y, owner, 0);
+            var cmd = TrackPopupMenuEx(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, x, y, owner, 0);
             menuOpen = false;
             if (cmd == 1) flyout.ShowFlyout();
             else if (cmd == 2) Shutdown();
@@ -84,10 +78,6 @@ public partial class App : Application
 
     [LibraryImport("user32.dll")]
     private static partial int TrackPopupMenuEx(nint menu, uint flags, int x, int y, nint hwnd, nint tpm);
-
-    [LibraryImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SetForegroundWindow(nint hwnd);
 
     [LibraryImport("uxtheme.dll", EntryPoint = "#135")]
     private static partial int SetPreferredAppMode(int mode);

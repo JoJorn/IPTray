@@ -51,6 +51,10 @@ Start-Process powershell -Verb RunAs -ArgumentList "-ExecutionPolicy Bypass -Fil
 
 | File | What |
 |---|---|
-| `App.xaml(.cs)` | Tray icon, menu, single instance |
+| `App.xaml(.cs)` | Startup, right-click menu, single instance |
+| `TrayIcon.cs` | The tray icon (without the delayed Windows tooltip) |
+| `HoverWindow.cs` | Adapter info shown while hovering the tray icon |
 | `MainWindow.xaml(.cs)` | The flyout UI |
+| `Settings.cs` | Settings saved in `%LOCALAPPDATA%\IPTray\settings.json` |
+| `Native.cs` | Shared Win32 calls |
 | `NetConfig.cs` | Reads adapters, validates input, applies settings with `netsh` |

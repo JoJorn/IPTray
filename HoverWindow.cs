@@ -3,8 +3,6 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
-using Drawing = System.Drawing;
-using Forms = System.Windows.Forms;
 
 namespace IPTray;
 
@@ -13,7 +11,8 @@ public class HoverWindow : Window
 {
     private readonly StackPanel _info = new();
     private readonly DispatcherTimer _leaveCheck = new() { Interval = TimeSpan.FromMilliseconds(100) };
-    private Drawing.Point _lastOverIcon;
+    private (int X, int Y) _lastOverIcon;
+    private Adapter? _shown;
     private bool _showing;
 
     public HoverWindow()
@@ -40,9 +39,9 @@ public class HoverWindow : Window
         // has moved more than an icon's width away from where it last was over it.
         _leaveCheck.Tick += (_, _) =>
         {
-            var pos = Forms.Cursor.Position;
-            var size = Forms.SystemInformation.SmallIconSize.Width;
-            if (Math.Abs(pos.X - _lastOverIcon.X) > size || Math.Abs(pos.Y - _lastOverIcon.Y) > size) Hide();
+            var (x, y) = Native.CursorPosition;
+            var size = Native.SmallIconSize;
+            if (Math.Abs(x - _lastOverIcon.X) > size || Math.Abs(y - _lastOverIcon.Y) > size) Hide();
         };
         IsVisibleChanged += (_, _) => { if (!IsVisible) _leaveCheck.Stop(); };
 
@@ -53,6 +52,8 @@ public class HoverWindow : Window
     /// <summary>Show the details of this adapter (null = none found).</summary>
     public void SetAdapter(Adapter? a)
     {
+        if (_info.Children.Count > 0 && a == _shown) return; // unchanged, keep what's there
+        _shown = a;
         _info.Children.Clear();
         _info.Children.Add(new TextBlock
         {
@@ -95,7 +96,7 @@ public class HoverWindow : Window
     /// <summary>Call on every mouse move over the tray icon.</summary>
     public void OnIconHover()
     {
-        _lastOverIcon = Forms.Cursor.Position;
+        _lastOverIcon = Native.CursorPosition;
         // Show() can process messages, so another hover may arrive while it runs.
         if (IsVisible || _showing) return;
 
@@ -120,7 +121,6 @@ public class HoverWindow : Window
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        int round = 3; // DWMWCP_ROUNDSMALL, like a tooltip
-        _ = MainWindow.DwmSetWindowAttribute(new WindowInteropHelper(this).Handle, 33, ref round, sizeof(int));
+        Native.SetCorners(new WindowInteropHelper(this).Handle, Native.Corners.RoundSmall); // like a tooltip
     }
 }

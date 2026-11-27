@@ -1,5 +1,4 @@
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -134,11 +133,6 @@ public partial class MainWindow : Window
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
-        var hwnd = new WindowInteropHelper(this).Handle;
-        int round = 2; // DWMWCP_ROUND
-        _ = DwmSetWindowAttribute(hwnd, 33 /* DWMWA_WINDOW_CORNER_PREFERENCE */, ref round, sizeof(int));
+        Native.SetCorners(new WindowInteropHelper(this).Handle, Native.Corners.Round);
     }
-
-    [LibraryImport("dwmapi.dll")]
-    internal static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref int value, int size);
 }
